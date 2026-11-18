@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -55,6 +55,10 @@ def statement(account_id: int, kind: str | None = Query(None, pattern="^(debit|c
               start: datetime | None = None, end: datetime | None = None, db: Session = Depends(get_db)):
     if not db.get(Account, account_id):
         raise HTTPException(404, "Conta não encontrada")
+    if start is not None and start.tzinfo is not None:
+        start = start.astimezone(timezone.utc).replace(tzinfo=None)
+    if end is not None and end.tzinfo is not None:
+        end = end.astimezone(timezone.utc).replace(tzinfo=None)
     if start and end and start > end:
         raise HTTPException(400, "Período inválido")
     stmt = select(LedgerEntry).where(LedgerEntry.account_id == account_id)
