@@ -43,7 +43,7 @@ em ambiente local.
 |---|---|
 | Unitária | Valores inválidos, precisão, limite monetário, cálculo de débito e saldo insuficiente. |
 | Integração | SQLite em memória para persistência, estorno transacional e precisão. SQLite temporário em disco para exercitar conexões independentes em disputa por saldo e por chave de idempotência. |
-| E2E | Requisições HTTP pelo FastAPI TestClient, da criação de contas ao extrato com filtros, incluindo reenvio e casos de erro. A carga também usa HTTP sobre uma instância Uvicorn. |
+| E2E | FastAPI TestClient para cenários de API e `test_http_server.py` para o fluxo completo por TCP/HTTP real contra um subprocesso Uvicorn, com banco temporário exclusivo: cadastro, transferência, reenvio idempotente, saldos, filtros de extrato e saldo insuficiente. |
 
 O **stub** cadastral responde com base em um titular fixo para reproduzir
 aceitação e rejeição. O **mock** do notificador verifica uma chamada com a
@@ -67,11 +67,28 @@ Os logs de cada etapa estão em `evidencias/tdd-*.txt`. O primeiro merge local
 a CI e o cenário de carga. O bundle permite recuperar os commits e inspecionar
 os dois merges com `git log --merges --oneline`.
 
-Os merges e as validações foram executados localmente. Para completar a
-evidência remota solicitada, a equipe deve publicar no repositório escolhido,
-registrar a primeira execução de Actions e configurar a proteção de `main`,
-com revisão e verificação obrigatória. Os PRs revisados e as configurações
-remotas deverão ser vinculados nesta seção após existirem.
+Os dois merges acima e os ciclos de TDD pertencem ao histórico local importado
+do bundle; não representam pull requests revisados no GitHub. O envio inicial
+de `main` foi feito antes da criação da proteção de branch. Essa sequência é
+registrada explicitamente, pois a proteção atual não valida retroativamente o
+histórico anterior.
+
+### Evidências remotas verificadas em 18/11/2026
+
+- Repositório público: [M4theus-fontes/wallet-api-capstone](https://github.com/M4theus-fontes/wallet-api-capstone).
+- Primeira CI em `main`: [execução 44347880853](https://github.com/M4theus-fontes/wallet-api-capstone/actions/runs/44347880853), concluída com sucesso no commit `e6cb94c`.
+- Artefato dessa execução: `wallet-ci-reports` (ID `14446267900`), com cobertura, JUnit e logs.
+- Melhorias submetidas no [pull request #1](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1), ainda sem aprovação independente. A [CI do push da branch](https://github.com/M4theus-fontes/wallet-api-capstone/actions/runs/44353364439) passou no commit `7b2254a`, com as Actions atualizadas e os testes complementares. As verificações da versão mais recente podem ser consultadas na [aba Checks do PR](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1/checks).
+- [Regra de proteção da main](https://github.com/M4theus-fontes/wallet-api-capstone/settings/branch_protection_rules/86534402): pull request obrigatório, uma aprovação, check `quality` do GitHub Actions, branch atualizada antes do merge e proibição de bypass inclusive por administradores. Force push e exclusão estão desabilitados. A página de configurações requer acesso administrativo.
+- A revisão final adiciona um teste E2E sobre HTTP real e seis casos de teste para os limites de cobertura. As Actions foram atualizadas para versões que usam Node.js 24.
+
+**Pendência de avaliação:** o autor informou que realiza a atividade sozinho.
+Ainda é necessária revisão independente do pull request por outra pessoa com
+permissão adequada e sua integração pelo fluxo protegido. Não se declara
+aprovação ou revisão por equipe enquanto isso não ocorrer. Se a entrega
+individual for uma exceção permitida, ela deve ser alinhada com o professor;
+não se remove a proteção apenas para contornar essa exigência.
+
 [GitHub Docs sobre proteção de branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
 
 ## 6. Integração contínua e cobertura
@@ -83,9 +100,21 @@ branches do XML. Os limites são aplicados sobre os valores exatos, antes do
 arredondamento de exibição. O artefato `wallet-ci-reports` recebe cobertura,
 JUnit e os logs das verificações.
 
-A execução local da entrega registrou **26 testes aprovados**, **98,62% de
+A execução local original da entrega registrou **26 testes aprovados**, **98,62% de
 linhas (214/217)** e **96,00% de branches (48/50)**. Os relatórios brutos e a saída
 dos comandos estão em `evidencias/`.
+
+Na validação complementar em Windows, Python 3.12.10, em 18/11/2026, foram
+aprovados **33 testes**, com os mesmos **214/217** pontos de linha e **48/50**
+branches cobertos. Ruff e o gate também passaram. O processo Uvicorn do teste
+HTTP é encerrado ao final e usa banco isolado. A cobertura informada é a
+coletada no processo principal do pytest, sem atribuir cobertura adicional ao
+subprocesso. Os seis testes do gate verificam aprovação nos limites exatos,
+rejeição de 84,99% de linhas ou 79,99% de branches e relatórios sem instrumentação.
+
+Permanece um aviso de depreciação do uso de `httpx` pelo TestClient da versão
+instalada de Starlette; ele não causou falha nos testes. Os relatórios da nova
+execução remota ficam no artefato `wallet-ci-reports` do PR correspondente.
 
 ## 7. Teste de carga
 
