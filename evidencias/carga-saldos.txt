@@ -1,0 +1,4 @@
+Transferências HTTP: 23324; falhas: 0
+Saldo origem: 976676.0; saldo destino: 23324.0
+Débitos: 23324; créditos: 23324
+Conciliação confirmada.

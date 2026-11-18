@@ -23,11 +23,15 @@ def test_mock_notifier_called_once_with_transfer(db):
 
 
 def test_stub_registration(db):
-    validator = Mock()
-    validator.is_valid.return_value = False
+    class FixedRegistrationStub:
+        def is_valid(self, owner):
+            return owner == "Titular autorizado"
+
+    validator = FixedRegistrationStub()
     with pytest.raises(DomainError, match="Cadastro"):
         create_account(db, "Ana", Decimal("5"), validator)
-    validator.is_valid.assert_called_once_with("Ana")
+    accepted = create_account(db, "Titular autorizado", Decimal("5"), validator)
+    assert accepted.owner == "Titular autorizado"
 
 
 @pytest.mark.parametrize("balance", [Decimal("-1"), Decimal("1.234"), Decimal("NaN")])
@@ -64,3 +68,21 @@ def test_idempotency_conflict(db):
     with pytest.raises(DomainError, match="reutilizada"):
         transfer_funds(db, a.id, b.id, Decimal("6"), "same")
     assert len(db.scalars(select(Transfer)).all()) == 1
+
+
+def test_destination_limit_rolls_back_debit(db):
+    source = create_account(db, "Ana", Decimal("10"))
+    target = create_account(db, "Bia", Decimal("9999999999.99"))
+    with pytest.raises(DomainError, match="limite monetário"):
+        transfer_funds(db, source.id, target.id, Decimal("1"), "overflow")
+    assert source.balance == Decimal("10")
+    assert db.scalars(select(LedgerEntry)).all() == []
+
+
+def test_fractional_transfers_preserve_cents(db):
+    source = create_account(db, "Ana", Decimal("0.30"))
+    target = create_account(db, "Bia", Decimal("0"))
+    for index in range(3):
+        transfer_funds(db, source.id, target.id, Decimal("0.10"), str(index))
+    assert source.balance == Decimal("0.00")
+    assert target.balance == Decimal("0.30")

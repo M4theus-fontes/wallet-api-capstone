@@ -1,0 +1,35 @@
+..........................                                               [100%]
+=============================== warnings summary ===============================
+../../../../../opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14
+  /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14: PytestRemovedIn10Warning: _pytest.python.CallSpec2 has been renamed to CallSpec.
+  The CallSpec2 alias will be removed in pytest 10.
+  Update imports to use CallSpec instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#callspec2-renamed
+    from _pytest.python import CallSpec2
+
+../../../../../opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.14-final-0 _______________
+
+Name                           Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------
+src/__init__.py                    0      0      0      0   100%
+src/controllers/__init__.py        0      0      0      0   100%
+src/controllers/api.py            60      0     14      0   100%
+src/domain/__init__.py             0      0      0      0   100%
+src/domain/models.py              27      0      0      0   100%
+src/domain/rules.py               17      0      6      0   100%
+src/main.py                       13      0      0      0   100%
+src/repositories/__init__.py       0      0      0      0   100%
+src/repositories/database.py      26      2      4      1    90%   14->21, 33-34
+src/services/__init__.py           0      0      0      0   100%
+src/services/antifraud.py          9      0      2      0   100%
+src/services/wallet.py            65      1     24      1    98%   76
+--------------------------------------------------------------------------
+TOTAL                            217      3     50      2    98%
+Coverage XML written to file evidencias/coverage.xml
+26 passed, 2 warnings in 0.38s

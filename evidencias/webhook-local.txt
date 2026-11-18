@@ -1,0 +1,3 @@
+Transferência original: {'id': 1, 'amount': 1.0, 'created': True}
+Reenvio: {'id': 1, 'amount': 1.0, 'created': False}
+POST /webhook HTTP/1.1" 202 Accepted
