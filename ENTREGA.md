@@ -2,6 +2,11 @@
 
 Repositório: https://github.com/M4theus-fontes/wallet-api-capstone
 
+Melhorias e relatório atualizado: [pull request #1](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1).
+As alterações estão na branch `feature/evidencias-entrega` e aguardam aprovação
+independente antes de entrar em `main`. A [CI da branch](https://github.com/M4theus-fontes/wallet-api-capstone/actions/runs/44353364439)
+passou no commit `7b2254a`; veja também os [checks atuais do PR](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1/checks).
+
 ## Evidências disponíveis
 
 | Item do enunciado | Onde conferir |

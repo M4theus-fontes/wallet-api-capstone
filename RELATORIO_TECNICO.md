@@ -78,6 +78,7 @@ histórico anterior.
 - Repositório público: [M4theus-fontes/wallet-api-capstone](https://github.com/M4theus-fontes/wallet-api-capstone).
 - Primeira CI em `main`: [execução 44347880853](https://github.com/M4theus-fontes/wallet-api-capstone/actions/runs/44347880853), concluída com sucesso no commit `e6cb94c`.
 - Artefato dessa execução: `wallet-ci-reports` (ID `14446267900`), com cobertura, JUnit e logs.
+- Melhorias submetidas no [pull request #1](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1), ainda sem aprovação independente. A [CI do push da branch](https://github.com/M4theus-fontes/wallet-api-capstone/actions/runs/44353364439) passou no commit `7b2254a`, com as Actions atualizadas e os testes complementares. As verificações da versão mais recente podem ser consultadas na [aba Checks do PR](https://github.com/M4theus-fontes/wallet-api-capstone/pull/1/checks).
 - [Regra de proteção da main](https://github.com/M4theus-fontes/wallet-api-capstone/settings/branch_protection_rules/86534402): pull request obrigatório, uma aprovação, check `quality` do GitHub Actions, branch atualizada antes do merge e proibição de bypass inclusive por administradores. Force push e exclusão estão desabilitados. A página de configurações requer acesso administrativo.
 - A revisão final adiciona um teste E2E sobre HTTP real e seis casos de teste para os limites de cobertura. As Actions foram atualizadas para versões que usam Node.js 24.
 
