@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 def test_full_flow(client):
     a = client.post("/accounts", json={"owner": "Ana", "initial_balance": "100.00"})
     b = client.post("/accounts", json={"owner": "Bia", "initial_balance": "0"})
@@ -34,3 +36,21 @@ def test_statement_accepts_mixed_timestamp_offsets(client):
     })
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_statement_date_filter_excludes_outside_interval(client):
+    assert client.get("/health").json() == {"status": "ok"}
+    source = client.post("/accounts", json={"owner": "Ana", "initial_balance": "2.00"}).json()["id"]
+    target = client.post("/accounts", json={"owner": "Bia"}).json()["id"]
+    response = client.post("/transfers", json={
+        "source_id": source, "destination_id": target, "amount": "1.00", "idempotency_key": "filter",
+    })
+    assert response.status_code == 201
+    path = f"/accounts/{source}/statement"
+    assert client.get(path, params={"end": "2000-01-01T00:00:00Z"}).json() == []
+    assert client.get(path, params={"kind": "credit"}).json() == []
+    entry, = client.get(path).json()
+    assert entry["kind"] == "debit"
+    assert Decimal(str(entry["amount"])) == Decimal("1.00")
+    assert entry["created_at"].endswith(("+00:00", "Z"))
+    assert client.get(path, params={"start": entry["created_at"], "end": entry["created_at"]}).json() == [entry]

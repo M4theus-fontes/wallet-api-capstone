@@ -1,14 +1,20 @@
-"""Valida separadamente cobertura de linhas e branches no XML do coverage.py."""
+"""Valida linhas e branches separadamente, sem arredondar antes da comparação."""
 import sys
 from xml.etree import ElementTree
 
 
 def main(path):
     root = ElementTree.parse(path).getroot()
-    lines = float(root.attrib["line-rate"]) * 100
-    branches = float(root.attrib["branch-rate"]) * 100
-    print(f"Linhas: {lines:.2f}% (mínimo 85%) | Branches: {branches:.2f}% (mínimo 80%)")
-    return 0 if lines >= 85 and branches >= 80 else 1
+    lines_hit = int(root.attrib["lines-covered"])
+    lines_total = int(root.attrib["lines-valid"])
+    branches_hit = int(root.attrib["branches-covered"])
+    branches_total = int(root.attrib["branches-valid"])
+    if not lines_total or not branches_total:
+        print("Relatório sem linhas ou branches instrumentados.")
+        return 1
+    print(f"Linhas: {lines_hit}/{lines_total} ({lines_hit / lines_total:.2%}), mínimo 85%")
+    print(f"Branches: {branches_hit}/{branches_total} ({branches_hit / branches_total:.2%}), mínimo 80%")
+    return int(lines_hit * 100 < 85 * lines_total or branches_hit * 100 < 80 * branches_total)
 
 
 if __name__ == "__main__":

@@ -1,15 +1,16 @@
+import logging
 from decimal import Decimal
-from sqlalchemy import select, update
+
+import httpx
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 from src.domain.models import Account, Transfer, LedgerEntry
-from src.domain.rules import DomainError, validate_amount
+from src.domain.rules import MAX_BALANCE, DomainError, valid_money, validate_amount
+from src.services.antifraud import Notifier
 
 
-class Notifier:
-    def notify(self, transfer: Transfer) -> None:
-        """Gateway fictício: substituível por mock; não faz chamadas externas."""
-        return None
+logger = logging.getLogger(__name__)
 
 
 class RegistrationStub:
@@ -21,7 +22,7 @@ def create_account(db: Session, owner: str, initial_balance: Decimal, validator=
     validator = validator or RegistrationStub()
     if not validator.is_valid(owner):
         raise DomainError("Cadastro inválido")
-    if not initial_balance.is_finite() or initial_balance < 0 or initial_balance.as_tuple().exponent < -2:
+    if not valid_money(initial_balance) or not 0 <= initial_balance <= MAX_BALANCE:
         raise DomainError("Saldo inicial inválido")
     account = Account(owner=owner, balance=initial_balance)
     db.add(account)
@@ -43,14 +44,20 @@ def transfer_funds(db: Session, source_id: int, destination_id: int, amount: Dec
         return existing, False
     try:
         # UPDATE condicional é atômico: duas transferências não podem gastar o mesmo saldo.
-        result = db.execute(update(Account).where(Account.id == source_id, Account.balance >= amount).values(balance=Account.balance - amount))
+        result = db.execute(update(Account).where(Account.id == source_id, Account.balance >= amount).values(balance=func.round(Account.balance - amount, 2)))
         if result.rowcount != 1:
             if not db.get(Account, source_id):
                 raise DomainError("Conta de origem inexistente")
             raise DomainError("Saldo insuficiente")
-        result = db.execute(update(Account).where(Account.id == destination_id).values(balance=Account.balance + amount))
+        result = db.execute(
+            update(Account)
+            .where(Account.id == destination_id, Account.balance <= MAX_BALANCE - amount)
+            .values(balance=func.round(Account.balance + amount, 2))
+        )
         if result.rowcount != 1:
-            raise DomainError("Conta de destino inexistente")
+            if not db.get(Account, destination_id):
+                raise DomainError("Conta de destino inexistente")
+            raise DomainError("Saldo de destino acima do limite monetário")
         item = Transfer(source_id=source_id, destination_id=destination_id, amount=amount, idempotency_key=key)
         db.add(item)
         db.flush()
@@ -69,5 +76,8 @@ def transfer_funds(db: Session, source_id: int, destination_id: int, amount: Dec
                 raise DomainError("Chave de idempotência reutilizada com outros dados")
             return winner, False
         raise
-    (notifier or Notifier()).notify(item)
+    try:
+        (notifier or Notifier()).notify(item)
+    except httpx.HTTPError:
+        logger.warning("Falha no webhook antifraude da transferência %s", item.id)
     return item, True

@@ -73,4 +73,4 @@ def statement(account_id: int, kind: str | None = Query(None, pattern="^(debit|c
     if end:
         stmt = stmt.where(LedgerEntry.created_at <= end)
     entries = db.scalars(stmt.order_by(LedgerEntry.id)).all()
-    return [{"id": e.id, "kind": e.kind, "amount": e.amount, "created_at": e.created_at} for e in entries]
+    return [{"id": e.id, "kind": e.kind, "amount": e.amount, "created_at": e.created_at.replace(tzinfo=timezone.utc)} for e in entries]
