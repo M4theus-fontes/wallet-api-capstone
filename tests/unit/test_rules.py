@@ -20,3 +20,8 @@ def test_debit_success():
 def test_debit_insufficient():
     with pytest.raises(DomainError, match="insuficiente"):
         debit(Decimal("5"), Decimal("10"))
+
+
+def test_debit_rejects_amount_above_supported_range():
+    with pytest.raises(DomainError, match="limite"):
+        debit(Decimal("20000000000.00"), Decimal("10000000000.00"))
