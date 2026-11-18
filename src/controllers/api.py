@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -50,11 +50,19 @@ def make_transfer(data: TransferInput, db: Session = Depends(get_db)):
         raise HTTPException(400, str(exc)) from exc
 
 
+def utc_filter(value: datetime | None) -> datetime | None:
+    if value is None or value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 @router.get("/accounts/{account_id}/statement")
 def statement(account_id: int, kind: str | None = Query(None, pattern="^(debit|credit)$"),
               start: datetime | None = None, end: datetime | None = None, db: Session = Depends(get_db)):
     if not db.get(Account, account_id):
         raise HTTPException(404, "Conta não encontrada")
+    start = utc_filter(start)
+    end = utc_filter(end)
     if start and end and start > end:
         raise HTTPException(400, "Período inválido")
     stmt = select(LedgerEntry).where(LedgerEntry.account_id == account_id)

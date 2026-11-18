@@ -24,3 +24,13 @@ def test_api_errors(client):
     assert client.post("/transfers", json={"source_id": a, "destination_id": b, "amount": 100, "idempotency_key": "no"}).status_code == 400
     assert client.get(f"/accounts/{a}/statement", params={"kind": "other"}).status_code == 422
     assert client.get(f"/accounts/{a}/statement", params={"start": "2030-01-01T00:00:00", "end": "2020-01-01T00:00:00"}).status_code == 400
+
+
+def test_statement_accepts_mixed_timestamp_offsets(client):
+    account = client.post("/accounts", json={"owner": "Ana"}).json()["id"]
+    response = client.get(f"/accounts/{account}/statement", params={
+        "start": "2020-01-01T00:00:00",
+        "end": "2030-01-01T00:00:00-03:00",
+    })
+    assert response.status_code == 200
+    assert response.json() == []
