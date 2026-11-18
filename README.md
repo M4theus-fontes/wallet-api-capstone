@@ -4,6 +4,9 @@ API acadêmica de carteira digital em Python, FastAPI, SQLAlchemy e SQLite.
 O [relatório técnico](RELATORIO_TECNICO.md) apresenta os requisitos, as decisões
 de implementação, o histórico de TDD e os resultados medidos.
 
+Veja a [conferência da entrega](ENTREGA.md) para os links das evidências e a
+pendência de revisão independente do pull request.
+
 ## Executar no Windows
 
 Abra o PowerShell na pasta deste README. Use Python 3.12.
